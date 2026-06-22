@@ -84,7 +84,7 @@ h2 {
 
 .app-shell {
   height: calc(100vh - 92px);
-  min-height: 620px;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
 }
@@ -286,6 +286,7 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   background: #fbfaf7;
   border-left: 1px solid var(--line);
 }
@@ -311,6 +312,8 @@ textarea:focus {
 }
 
 .issue-list {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   padding: 12px;
 }
@@ -629,6 +632,16 @@ textarea:focus {
 
   .issue-list {
     max-height: none;
+  }
+}
+
+@media (min-width: 901px) {
+  body {
+    overflow: hidden;
+  }
+
+  .app-shell {
+    height: calc(100dvh - 92px);
   }
 }
 
