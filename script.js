@@ -22,6 +22,7 @@ const issues = [
     description: "函館駅前の横断歩道で歩行者の待ち時間が長く、冬場や観光客の移動時に負担が大きいです。",
     category: "交通",
     status: "未対応",
+    empathy: 18,
     lat: 41.77372,
     lng: 140.72644
   },
@@ -31,6 +32,7 @@ const issues = [
     description: "五稜郭公園付近の一部歩道で夜間の見通しが悪く、帰宅時に不安を感じます。",
     category: "防犯",
     status: "対応中",
+    empathy: 12,
     lat: 41.79689,
     lng: 140.75676
   },
@@ -40,6 +42,7 @@ const issues = [
     description: "ベイエリアで主要スポットへの案内が分かりにくく、初めて訪れる人が迷いやすいです。",
     category: "観光",
     status: "未対応",
+    empathy: 9,
     lat: 41.76825,
     lng: 140.71664
   },
@@ -49,6 +52,7 @@ const issues = [
     description: "湯の川温泉付近で歩道が狭い場所があり、ベビーカーや高齢者の通行に余裕がありません。",
     category: "道路",
     status: "解決済み",
+    empathy: 24,
     lat: 41.78078,
     lng: 140.78845
   },
@@ -58,6 +62,7 @@ const issues = [
     description: "元町エリアの坂道で冬季に滑りやすい箇所があり、手すりや注意表示の追加があると安心です。",
     category: "高齢者",
     status: "対応中",
+    empathy: 15,
     lat: 41.76355,
     lng: 140.71174
   }
@@ -119,6 +124,7 @@ function createIssueIcon(status) {
 
 function createPopup(issue) {
   const classes = getStatusClasses(issue.status);
+  const empathy = Number(issue.empathy) || 0;
 
   return `
     <article>
@@ -127,6 +133,7 @@ function createPopup(issue) {
       <div class="popup-meta">
         <span class="tag">${escapeHtml(issue.category)}</span>
         <span class="tag ${classes.tagClass}">${escapeHtml(issue.status)}</span>
+        <span class="tag empathy-tag">共感 ${empathy}</span>
       </div>
     </article>
   `;
@@ -153,9 +160,10 @@ function renderIssueList() {
 
   issueList.innerHTML = issues.map((issue) => {
     const classes = getStatusClasses(issue.status);
+    const empathy = Number(issue.empathy) || 0;
 
     return `
-      <button class="issue-card" type="button" data-issue-id="${issue.id}">
+      <article class="issue-card" role="button" tabindex="0" data-issue-id="${issue.id}">
         <span class="issue-card-title">
           <span>${escapeHtml(issue.title)}</span>
         </span>
@@ -164,7 +172,11 @@ function renderIssueList() {
           <span class="tag">${escapeHtml(issue.category)}</span>
           <span class="tag ${classes.tagClass}">${escapeHtml(issue.status)}</span>
         </span>
-      </button>
+        <span class="issue-card-actions">
+          <span class="empathy-count">共感 ${empathy}</span>
+          <button class="empathy-button" type="button" data-empathy-id="${issue.id}" aria-label="${escapeHtml(issue.title)}に共感する">共感する</button>
+        </span>
+      </article>
     `;
   }).join("");
 }
@@ -213,6 +225,7 @@ function addIssueFromForm(event) {
     description: formData.get("description").trim(),
     category: formData.get("category"),
     status: formData.get("status"),
+    empathy: 0,
     lat: selectedLatLng.lat,
     lng: selectedLatLng.lng
   };
@@ -223,6 +236,23 @@ function addIssueFromForm(event) {
   renderIssueList();
   closeIssueForm();
   focusIssue(newIssue.id);
+}
+
+function addEmpathy(issueId) {
+  const issue = issues.find((item) => item.id === issueId);
+  const marker = markersById.get(issueId);
+
+  if (!issue) {
+    return;
+  }
+
+  issue.empathy = (Number(issue.empathy) || 0) + 1;
+
+  if (marker) {
+    marker.setPopupContent(createPopup(issue));
+  }
+
+  renderIssueList();
 }
 
 map.whenReady(() => {
@@ -241,12 +271,41 @@ closeFormButton.addEventListener("click", closeIssueForm);
 issueForm.addEventListener("submit", addIssueFromForm);
 
 issueList.addEventListener("click", (event) => {
+  const empathyButton = event.target.closest("[data-empathy-id]");
+
+  if (empathyButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    addEmpathy(Number(empathyButton.dataset.empathyId));
+    return;
+  }
+
   const card = event.target.closest(".issue-card");
 
   if (!card) {
     return;
   }
 
+  focusIssue(Number(card.dataset.issueId));
+});
+
+issueList.addEventListener("keydown", (event) => {
+  const empathyButton = event.target.closest("[data-empathy-id]");
+
+  if (empathyButton && (event.key === "Enter" || event.key === " ")) {
+    event.preventDefault();
+    event.stopPropagation();
+    addEmpathy(Number(empathyButton.dataset.empathyId));
+    return;
+  }
+
+  const card = event.target.closest(".issue-card");
+
+  if (!card || (event.key !== "Enter" && event.key !== " ")) {
+    return;
+  }
+
+  event.preventDefault();
   focusIssue(Number(card.dataset.issueId));
 });
 

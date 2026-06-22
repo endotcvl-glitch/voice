@@ -358,6 +358,41 @@ textarea:focus {
   gap: 6px;
 }
 
+.issue-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.empathy-count {
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.empathy-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid rgba(75, 127, 111, 0.3);
+  border-radius: 999px;
+  background: #edf2ef;
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.empathy-button:hover,
+.empathy-button:focus {
+  border-color: var(--accent);
+  background: #e2eee8;
+  outline: none;
+}
+
 .tag {
   display: inline-flex;
   align-items: center;
@@ -383,6 +418,11 @@ textarea:focus {
 .tag.status-tag-resolved {
   background: rgba(75, 169, 106, 0.14);
   color: #2d7546;
+}
+
+.tag.empathy-tag {
+  background: #edf2ef;
+  color: var(--accent-dark);
 }
 
 .custom-marker {
