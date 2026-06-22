@@ -23,6 +23,11 @@ const issues = [
     category: "交通",
     status: "未対応",
     empathy: 18,
+    comments: [
+      "冬場は待っている間も寒く、もう少し短くなると助かります。",
+      "観光客が多い時間帯は歩道に人がたまりやすいです。",
+      "子ども連れだと渡るタイミングが分かりにくいです。"
+    ],
     lat: 41.77372,
     lng: 140.72644
   },
@@ -33,6 +38,10 @@ const issues = [
     category: "防犯",
     status: "対応中",
     empathy: 12,
+    comments: [
+      "夜に通ると足元が見えにくい場所があります。",
+      "公園から駐車場までの道がもう少し明るいと安心です。"
+    ],
     lat: 41.79689,
     lng: 140.75676
   },
@@ -43,6 +52,10 @@ const issues = [
     category: "観光",
     status: "未対応",
     empathy: 9,
+    comments: [
+      "初めて来た友人が赤レンガ方面で少し迷っていました。",
+      "英語表記の案内も増えると便利だと思います。"
+    ],
     lat: 41.76825,
     lng: 140.71664
   },
@@ -53,6 +66,10 @@ const issues = [
     category: "道路",
     status: "解決済み",
     empathy: 24,
+    comments: [
+      "以前より歩きやすくなりました。",
+      "段差が減ってベビーカーでも通りやすいです。"
+    ],
     lat: 41.78078,
     lng: 140.78845
   },
@@ -63,6 +80,10 @@ const issues = [
     category: "高齢者",
     status: "対応中",
     empathy: 15,
+    comments: [
+      "坂の途中に休める場所があるとさらに助かります。",
+      "冬は特に滑りやすいので注意表示があると安心です。"
+    ],
     lat: 41.76355,
     lng: 140.71174
   }
@@ -71,6 +92,7 @@ const issues = [
 let nextIssueId = issues.length + 1;
 let selectedLatLng = null;
 const markersById = new Map();
+const commentIndexesById = new Map();
 
 const map = L.map("map", {
   zoomControl: true
@@ -125,6 +147,8 @@ function createIssueIcon(status) {
 function createPopup(issue) {
   const classes = getStatusClasses(issue.status);
   const empathy = Number(issue.empathy) || 0;
+  const comments = getComments(issue);
+  const latestComment = comments[comments.length - 1];
 
   return `
     <article>
@@ -135,6 +159,12 @@ function createPopup(issue) {
         <span class="tag ${classes.tagClass}">${escapeHtml(issue.status)}</span>
         <span class="tag empathy-tag">共感 ${empathy}</span>
       </div>
+      ${latestComment ? `
+        <div class="popup-comment">
+          <span>最新の声</span>
+          <p>${escapeHtml(latestComment)}</p>
+        </div>
+      ` : ""}
     </article>
   `;
 }
@@ -161,6 +191,10 @@ function renderIssueList() {
   issueList.innerHTML = issues.map((issue) => {
     const classes = getStatusClasses(issue.status);
     const empathy = Number(issue.empathy) || 0;
+    const comments = getComments(issue);
+    const commentIndex = getCommentIndex(issue.id, comments.length);
+    const currentComment = comments[commentIndex];
+    const sliderDisabled = comments.length < 2 ? "disabled" : "";
 
     return `
       <article class="issue-card" role="button" tabindex="0" data-issue-id="${issue.id}">
@@ -172,6 +206,21 @@ function renderIssueList() {
           <span class="tag">${escapeHtml(issue.category)}</span>
           <span class="tag ${classes.tagClass}">${escapeHtml(issue.status)}</span>
         </span>
+        <span class="comment-slider" aria-label="${escapeHtml(issue.title)}のみんなの声">
+          <span class="comment-slider-head">
+            <span>みんなの声 ${comments.length}件</span>
+            <span class="comment-slider-controls">
+              <button class="comment-nav-button" type="button" data-comment-action="prev" data-comment-id="${issue.id}" aria-label="前の声を表示" ${sliderDisabled}>‹</button>
+              <span>${comments.length ? `${commentIndex + 1}/${comments.length}` : "0/0"}</span>
+              <button class="comment-nav-button" type="button" data-comment-action="next" data-comment-id="${issue.id}" aria-label="次の声を表示" ${sliderDisabled}>›</button>
+            </span>
+          </span>
+          <span class="comment-slide-text">${currentComment ? escapeHtml(currentComment) : "まだ声はありません。最初の声を追加できます。"}</span>
+        </span>
+        <form class="comment-form" data-comment-form-id="${issue.id}">
+          <input type="text" name="comment" maxlength="120" placeholder="同じ意見に声を追加" aria-label="${escapeHtml(issue.title)}に声を追加">
+          <button type="submit">追加</button>
+        </form>
         <span class="issue-card-actions">
           <span class="empathy-count">共感 ${empathy}</span>
           <button class="empathy-button" type="button" data-empathy-id="${issue.id}" aria-label="${escapeHtml(issue.title)}に共感する">共感する</button>
@@ -226,6 +275,7 @@ function addIssueFromForm(event) {
     category: formData.get("category"),
     status: formData.get("status"),
     empathy: 0,
+    comments: [],
     lat: selectedLatLng.lat,
     lng: selectedLatLng.lng
   };
@@ -238,20 +288,66 @@ function addIssueFromForm(event) {
   focusIssue(newIssue.id);
 }
 
-function addEmpathy(issueId) {
+function getComments(issue) {
+  return Array.isArray(issue.comments) ? issue.comments : [];
+}
+
+function getCommentIndex(issueId, commentCount) {
+  if (commentCount === 0) {
+    return 0;
+  }
+
+  const savedIndex = commentIndexesById.get(issueId) || 0;
+  return Math.min(Math.max(savedIndex, 0), commentCount - 1);
+}
+
+function updateIssuePopup(issueId) {
   const issue = issues.find((item) => item.id === issueId);
   const marker = markersById.get(issueId);
+
+  if (issue && marker) {
+    marker.setPopupContent(createPopup(issue));
+  }
+}
+
+function addEmpathy(issueId) {
+  const issue = issues.find((item) => item.id === issueId);
 
   if (!issue) {
     return;
   }
 
   issue.empathy = (Number(issue.empathy) || 0) + 1;
+  updateIssuePopup(issueId);
+  renderIssueList();
+}
 
-  if (marker) {
-    marker.setPopupContent(createPopup(issue));
+function moveComment(issueId, direction) {
+  const issue = issues.find((item) => item.id === issueId);
+  const comments = issue ? getComments(issue) : [];
+
+  if (comments.length < 2) {
+    return;
   }
 
+  const currentIndex = getCommentIndex(issueId, comments.length);
+  const nextIndex = (currentIndex + direction + comments.length) % comments.length;
+  commentIndexesById.set(issueId, nextIndex);
+  renderIssueList();
+}
+
+function addComment(issueId, commentText) {
+  const issue = issues.find((item) => item.id === issueId);
+  const normalizedComment = String(commentText || "").trim();
+
+  if (!issue || !normalizedComment) {
+    return;
+  }
+
+  issue.comments = getComments(issue);
+  issue.comments.push(normalizedComment);
+  commentIndexesById.set(issueId, issue.comments.length - 1);
+  updateIssuePopup(issueId);
   renderIssueList();
 }
 
@@ -280,6 +376,26 @@ issueList.addEventListener("click", (event) => {
     return;
   }
 
+  const commentButton = event.target.closest("[data-comment-action]");
+
+  if (commentButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    moveComment(
+      Number(commentButton.dataset.commentId),
+      commentButton.dataset.commentAction === "next" ? 1 : -1
+    );
+    return;
+  }
+
+  if (event.target.closest(".comment-form")) {
+    return;
+  }
+
+  if (event.target.closest(".comment-slider")) {
+    return;
+  }
+
   const card = event.target.closest(".issue-card");
 
   if (!card) {
@@ -289,6 +405,19 @@ issueList.addEventListener("click", (event) => {
   focusIssue(Number(card.dataset.issueId));
 });
 
+issueList.addEventListener("submit", (event) => {
+  const form = event.target.closest("[data-comment-form-id]");
+
+  if (!form) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  const formData = new FormData(form);
+  addComment(Number(form.dataset.commentFormId), formData.get("comment"));
+});
+
 issueList.addEventListener("keydown", (event) => {
   const empathyButton = event.target.closest("[data-empathy-id]");
 
@@ -296,6 +425,14 @@ issueList.addEventListener("keydown", (event) => {
     event.preventDefault();
     event.stopPropagation();
     addEmpathy(Number(empathyButton.dataset.empathyId));
+    return;
+  }
+
+  if (event.target.closest(".comment-form")) {
+    return;
+  }
+
+  if (event.target.closest(".comment-slider")) {
     return;
   }
 
