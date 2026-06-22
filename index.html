@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>函館まちの声マップ</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Hakodate Civic Issue Map Prototype</p>
+      <h1>函館まちの声マップ</h1>
+    </div>
+    <p class="header-copy">地図をクリックして、まちの気づきや改善提案を記録できます。</p>
+  </header>
+
+  <main class="app-shell">
+    <section class="map-section" aria-label="函館市の地域課題マップ">
+      <div id="map"></div>
+
+      <aside class="legend" aria-label="ステータス凡例">
+        <h2>凡例</h2>
+        <div class="legend-row">
+          <span class="legend-dot status-open"></span>
+          <span>未対応</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-dot status-progress"></span>
+          <span>対応中</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-dot status-resolved"></span>
+          <span>解決済み</span>
+        </div>
+      </aside>
+
+      <form class="issue-form" id="issue-form" aria-label="地域課題の投稿フォーム">
+        <div class="form-head">
+          <div>
+            <p class="form-kicker">新しい投稿</p>
+            <h2>この場所について</h2>
+          </div>
+          <button type="button" class="icon-button" id="close-form" aria-label="投稿フォームを閉じる">×</button>
+        </div>
+
+        <p class="selected-point" id="selected-point">地図をクリックすると位置が入ります。</p>
+
+        <label>
+          タイトル
+          <input type="text" id="title" name="title" placeholder="例：歩道の段差が気になる" required>
+        </label>
+
+        <label>
+          内容
+          <textarea id="description" name="description" rows="4" placeholder="状況や改善案を入力してください" required></textarea>
+        </label>
+
+        <div class="form-grid">
+          <label>
+            カテゴリー
+            <select id="category" name="category" required>
+              <option value="交通">交通</option>
+              <option value="防犯">防犯</option>
+              <option value="道路">道路</option>
+              <option value="公園">公園</option>
+              <option value="子育て">子育て</option>
+              <option value="高齢者">高齢者</option>
+              <option value="観光">観光</option>
+              <option value="その他">その他</option>
+            </select>
+          </label>
+
+          <label>
+            ステータス
+            <select id="status" name="status" required>
+              <option value="未対応">未対応</option>
+              <option value="対応中">対応中</option>
+              <option value="解決済み">解決済み</option>
+            </select>
+          </label>
+        </div>
+
+        <button type="submit" class="submit-button">地図に投稿する</button>
+      </form>
+    </section>
+
+    <aside class="list-panel" aria-label="投稿一覧">
+      <div class="list-head">
+        <div>
+          <p class="eyebrow">Issue List</p>
+          <h2>投稿一覧</h2>
+        </div>
+        <span class="issue-count" id="issue-count">0件</span>
+      </div>
+      <div class="issue-list" id="issue-list"></div>
+    </aside>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
