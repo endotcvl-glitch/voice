@@ -82,6 +82,36 @@ h2 {
   line-height: 1.7;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+}
+
+.rule-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 13px;
+  border: 1px solid rgba(75, 127, 111, 0.28);
+  border-radius: 999px;
+  background: #edf2ef;
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rule-link:hover,
+.rule-link:focus {
+  border-color: var(--accent);
+  background: #e2eee8;
+  outline: none;
+}
+
 .app-shell {
   height: calc(100vh - 92px);
   min-height: 0;
@@ -601,6 +631,80 @@ textarea:focus {
   line-height: 1.55;
 }
 
+.rules-page {
+  min-height: 100vh;
+  background: #fbfaf7;
+}
+
+.rules-shell {
+  width: min(980px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 34px 0 52px;
+}
+
+.rules-hero,
+.rules-note {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-solid);
+}
+
+.rules-hero h2 {
+  max-width: 680px;
+  font-size: clamp(24px, 4vw, 38px);
+  line-height: 1.25;
+}
+
+.rules-hero p,
+.rules-note p {
+  max-width: 720px;
+  margin: 14px 0 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.rule-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.rule-card h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.rule-card ul {
+  margin: 0;
+  padding-left: 19px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.rule-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.rule-example {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #edf2ef;
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .app-header {
     min-height: auto;
@@ -611,6 +715,12 @@ textarea:focus {
   .header-copy {
     margin-top: 8px;
     font-size: 13px;
+  }
+
+  .header-actions {
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-top: 8px;
   }
 
   .app-shell {
@@ -633,10 +743,14 @@ textarea:focus {
   .issue-list {
     max-height: none;
   }
+
+  .rules-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (min-width: 901px) {
-  body {
+  body:not(.rules-page) {
     overflow: hidden;
   }
 
@@ -679,6 +793,15 @@ textarea:focus {
 
   .comment-form {
     grid-template-columns: 1fr;
+  }
+
+  .header-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .rule-link {
+    width: fit-content;
   }
 
   .list-head {
