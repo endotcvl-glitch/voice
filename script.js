@@ -1,5 +1,24 @@
 const HAKODATE_STATION = [41.77372, 140.72644];
 
+// プロトタイプ用の簡易境界。正確な制限が必要になったら自治体境界GeoJSONに差し替える。
+const HAKODATE_SAMPLE_BOUNDARY = [
+  [41.742, 140.676],
+  [41.764, 140.704],
+  [41.803, 140.709],
+  [41.833, 140.744],
+  [41.875, 140.825],
+  [41.911, 140.929],
+  [41.933, 141.030],
+  [41.914, 141.125],
+  [41.855, 141.172],
+  [41.790, 141.126],
+  [41.747, 141.020],
+  [41.709, 140.902],
+  [41.686, 140.792],
+  [41.690, 140.716],
+  [41.742, 140.676]
+];
+
 const statusConfig = {
   "未対応": {
     markerClass: "status-open",
@@ -103,11 +122,15 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors"
 }).addTo(map);
 
+addHakodateBoundary();
+
 const issueForm = document.querySelector("#issue-form");
 const closeFormButton = document.querySelector("#close-form");
 const selectedPoint = document.querySelector("#selected-point");
 const issueList = document.querySelector("#issue-list");
 const issueCount = document.querySelector("#issue-count");
+const areaNotice = document.querySelector("#area-notice");
+let areaNoticeTimer = null;
 
 function refreshMapSize() {
   requestAnimationFrame(() => {
@@ -130,6 +153,51 @@ function escapeHtml(value) {
 
 function getStatusClasses(status) {
   return statusConfig[status] || statusConfig["未対応"];
+}
+
+function addHakodateBoundary() {
+  L.polygon(HAKODATE_SAMPLE_BOUNDARY, {
+    className: "hakodate-boundary",
+    color: "#2f5f52",
+    weight: 2,
+    opacity: 0.85,
+    fill: false,
+    dashArray: "8 8",
+    interactive: false
+  }).addTo(map);
+}
+
+function isInsideBoundary(latlng, boundary) {
+  const x = latlng.lng;
+  const y = latlng.lat;
+  let isInside = false;
+
+  for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i, i += 1) {
+    const xi = boundary[i][1];
+    const yi = boundary[i][0];
+    const xj = boundary[j][1];
+    const yj = boundary[j][0];
+    const intersects = ((yi > y) !== (yj > y)) &&
+      (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+
+    if (intersects) {
+      isInside = !isInside;
+    }
+  }
+
+  return isInside;
+}
+
+function showAreaNotice() {
+  areaNotice.classList.add("is-visible");
+
+  if (areaNoticeTimer) {
+    clearTimeout(areaNoticeTimer);
+  }
+
+  areaNoticeTimer = setTimeout(() => {
+    areaNotice.classList.remove("is-visible");
+  }, 3200);
 }
 
 function createIssueIcon(status) {
@@ -360,6 +428,12 @@ window.addEventListener("load", refreshMapSize);
 window.addEventListener("resize", refreshMapSize);
 
 map.on("click", (event) => {
+  if (!isInsideBoundary(event.latlng, HAKODATE_SAMPLE_BOUNDARY)) {
+    closeIssueForm();
+    showAreaNotice();
+    return;
+  }
+
   openIssueForm(event.latlng);
 });
 

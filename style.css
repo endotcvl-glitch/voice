@@ -166,13 +166,36 @@ h2 {
 }
 
 .legend,
-.issue-form {
+.issue-form,
+.area-notice {
   position: absolute;
   z-index: 500;
   background: var(--panel);
   border: 1px solid rgba(217, 222, 216, 0.8);
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
+}
+
+.area-notice {
+  left: 18px;
+  top: 18px;
+  width: min(420px, calc(100% - 190px));
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.6;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.area-notice.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .legend {
@@ -774,6 +797,13 @@ textarea:focus {
     right: 12px;
     width: 132px;
     padding: 12px;
+  }
+
+  .area-notice {
+    left: 10px;
+    top: auto;
+    bottom: 10px;
+    width: calc(100% - 20px);
   }
 
   .issue-form {
