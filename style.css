@@ -228,6 +228,49 @@ h2 {
   box-shadow: 0 0 0 1px rgba(39, 48, 45, 0.16);
 }
 
+.legend-divider {
+  height: 1px;
+  margin: 8px 0;
+  background: var(--line);
+}
+
+.legend-pin {
+  width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffffff;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px rgba(39, 48, 45, 0.16);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.legend-pin::before {
+  display: block;
+  color: #ffffff;
+}
+
+.legend-pin-problem {
+  border-radius: 50% 50% 50% 5px;
+  transform: rotate(-45deg);
+}
+
+.legend-pin-problem::before {
+  content: "!";
+  transform: rotate(45deg);
+}
+
+.legend-pin-request {
+  border-radius: 50%;
+}
+
+.legend-pin-request::before {
+  content: "+";
+}
+
 .status-open {
   background: var(--open);
 }
@@ -566,6 +609,16 @@ textarea:focus {
   color: #2d7546;
 }
 
+.tag.type-tag-problem {
+  background: rgba(230, 91, 84, 0.1);
+  color: #a43c37;
+}
+
+.tag.type-tag-request {
+  background: rgba(75, 127, 111, 0.12);
+  color: var(--accent-dark);
+}
+
 .tag.empathy-tag {
   background: #edf2ef;
   color: var(--accent-dark);
@@ -576,9 +629,17 @@ textarea:focus {
   background: transparent;
 }
 
+.marker-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--marker-size);
+  transform: translateY(0);
+}
+
 .marker-pin {
-  width: 28px;
-  height: 28px;
+  width: var(--marker-size);
+  height: var(--marker-size);
   display: grid;
   place-items: center;
   border: 3px solid #fff;
@@ -587,12 +648,17 @@ textarea:focus {
   transform: rotate(-45deg);
 }
 
-.marker-pin::after {
-  content: "";
-  width: 8px;
-  height: 8px;
+.marker-pin.marker-type-request {
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+}
+
+.marker-symbol {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: max(12px, calc(var(--marker-size) * 0.42));
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(39, 48, 45, 0.28);
+  transform: rotate(45deg);
 }
 
 .marker-pin.status-open,
@@ -611,6 +677,28 @@ textarea:focus {
 
 .marker-pin.status-resolved {
   color: var(--resolved);
+}
+
+.marker-empathy {
+  min-width: 22px;
+  padding: 3px 6px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 14px rgba(39, 48, 45, 0.16);
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+}
+
+.marker-title-tooltip {
+  border: 1px solid rgba(39, 48, 45, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(39, 48, 45, 0.14);
+  color: var(--text);
+  font-weight: 800;
 }
 
 .leaflet-popup-content {

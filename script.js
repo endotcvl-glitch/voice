@@ -34,11 +34,25 @@ const statusConfig = {
   }
 };
 
+const typeConfig = {
+  "問題点": {
+    markerClass: "marker-type-problem",
+    tagClass: "type-tag-problem",
+    symbol: "!"
+  },
+  "要望": {
+    markerClass: "marker-type-request",
+    tagClass: "type-tag-request",
+    symbol: "+"
+  }
+};
+
 const issues = [
   {
     id: 1,
     title: "横断歩道の待ち時間が長い",
     description: "函館駅前の横断歩道で歩行者の待ち時間が長く、冬場や観光客の移動時に負担が大きいです。",
+    type: "問題点",
     category: "交通",
     status: "未対応",
     empathy: 18,
@@ -54,6 +68,7 @@ const issues = [
     id: 2,
     title: "夜間の街灯が少ない",
     description: "五稜郭公園付近の一部歩道で夜間の見通しが悪く、帰宅時に不安を感じます。",
+    type: "問題点",
     category: "防犯",
     status: "対応中",
     empathy: 12,
@@ -68,6 +83,7 @@ const issues = [
     id: 3,
     title: "観光客向け案内表示が少ない",
     description: "ベイエリアで主要スポットへの案内が分かりにくく、初めて訪れる人が迷いやすいです。",
+    type: "要望",
     category: "観光",
     status: "未対応",
     empathy: 9,
@@ -82,6 +98,7 @@ const issues = [
     id: 4,
     title: "歩道が狭い",
     description: "湯の川温泉付近で歩道が狭い場所があり、ベビーカーや高齢者の通行に余裕がありません。",
+    type: "問題点",
     category: "道路",
     status: "解決済み",
     empathy: 24,
@@ -96,6 +113,7 @@ const issues = [
     id: 5,
     title: "坂道の安全対策が必要",
     description: "元町エリアの坂道で冬季に滑りやすい箇所があり、手すりや注意表示の追加があると安心です。",
+    type: "要望",
     category: "高齢者",
     status: "対応中",
     empathy: 15,
@@ -155,6 +173,10 @@ function getStatusClasses(status) {
   return statusConfig[status] || statusConfig["未対応"];
 }
 
+function getTypeConfig(type) {
+  return typeConfig[type] || typeConfig["問題点"];
+}
+
 function addHakodateBoundary() {
   L.polygon(HAKODATE_SAMPLE_BOUNDARY, {
     className: "hakodate-boundary",
@@ -200,20 +222,38 @@ function showAreaNotice() {
   }, 3200);
 }
 
-function createIssueIcon(status) {
-  const classes = getStatusClasses(status);
+function getMarkerSize(empathy) {
+  return Math.min(48, 26 + Math.sqrt(Number(empathy) || 0) * 4);
+}
+
+function createIssueIcon(issue) {
+  const statusClasses = getStatusClasses(issue.status);
+  const type = getTypeConfig(issue.type);
+  const empathy = Number(issue.empathy) || 0;
+  const markerSize = getMarkerSize(empathy);
+  const labelWidth = Math.max(34, String(empathy).length * 10 + 18);
+  const iconWidth = markerSize + labelWidth + 4;
+  const escapedTitle = escapeHtml(issue.title);
 
   return L.divIcon({
     className: "custom-marker",
-    html: `<span class="marker-pin ${classes.markerClass}" aria-hidden="true"></span>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28]
+    html: `
+      <span class="marker-wrap" style="--marker-size: ${markerSize}px;" aria-label="${escapedTitle} 共感 ${empathy}">
+        <span class="marker-pin ${statusClasses.markerClass} ${type.markerClass}" aria-hidden="true">
+          <span class="marker-symbol">${type.symbol}</span>
+        </span>
+        <span class="marker-empathy" aria-hidden="true">${empathy}</span>
+      </span>
+    `,
+    iconSize: [iconWidth, markerSize],
+    iconAnchor: [markerSize / 2, markerSize],
+    popupAnchor: [0, -markerSize]
   });
 }
 
 function createPopup(issue) {
   const classes = getStatusClasses(issue.status);
+  const type = getTypeConfig(issue.type);
   const empathy = Number(issue.empathy) || 0;
   const comments = getComments(issue);
   const latestComment = comments[comments.length - 1];
@@ -223,6 +263,7 @@ function createPopup(issue) {
       <h3 class="popup-title">${escapeHtml(issue.title)}</h3>
       <p class="popup-description">${escapeHtml(issue.description)}</p>
       <div class="popup-meta">
+        <span class="tag ${type.tagClass}">${escapeHtml(issue.type || "問題点")}</span>
         <span class="tag">${escapeHtml(issue.category)}</span>
         <span class="tag ${classes.tagClass}">${escapeHtml(issue.status)}</span>
         <span class="tag empathy-tag">共感 ${empathy}</span>
@@ -239,11 +280,18 @@ function createPopup(issue) {
 
 function addMarker(issue) {
   const marker = L.marker([issue.lat, issue.lng], {
-    icon: createIssueIcon(issue.status),
+    icon: createIssueIcon(issue),
     title: issue.title
   }).addTo(map);
 
   marker.bindPopup(createPopup(issue));
+  marker.bindTooltip(escapeHtml(issue.title), {
+    className: "marker-title-tooltip",
+    direction: "top",
+    offset: [0, -getMarkerSize(issue.empathy) - 4],
+    opacity: 0.96,
+    sticky: true
+  });
   markersById.set(issue.id, marker);
 }
 
@@ -258,6 +306,7 @@ function renderIssueList() {
 
   issueList.innerHTML = issues.map((issue) => {
     const classes = getStatusClasses(issue.status);
+    const type = getTypeConfig(issue.type);
     const empathy = Number(issue.empathy) || 0;
     const comments = getComments(issue);
     const commentIndex = getCommentIndex(issue.id, comments.length);
@@ -271,6 +320,7 @@ function renderIssueList() {
         </span>
         <p>${escapeHtml(issue.description)}</p>
         <span class="tag-row">
+          <span class="tag ${type.tagClass}">${escapeHtml(issue.type || "問題点")}</span>
           <span class="tag">${escapeHtml(issue.category)}</span>
           <span class="tag ${classes.tagClass}">${escapeHtml(issue.status)}</span>
         </span>
@@ -340,6 +390,7 @@ function addIssueFromForm(event) {
     id: nextIssueId,
     title: formData.get("title").trim(),
     description: formData.get("description").trim(),
+    type: formData.get("type"),
     category: formData.get("category"),
     status: formData.get("status"),
     empathy: 0,
@@ -378,6 +429,25 @@ function updateIssuePopup(issueId) {
   }
 }
 
+function updateIssueMarker(issueId) {
+  const issue = issues.find((item) => item.id === issueId);
+  const marker = markersById.get(issueId);
+
+  if (!issue || !marker) {
+    return;
+  }
+
+  marker.setIcon(createIssueIcon(issue));
+  marker.unbindTooltip();
+  marker.bindTooltip(escapeHtml(issue.title), {
+    className: "marker-title-tooltip",
+    direction: "top",
+    offset: [0, -getMarkerSize(issue.empathy) - 4],
+    opacity: 0.96,
+    sticky: true
+  });
+}
+
 function addEmpathy(issueId) {
   const issue = issues.find((item) => item.id === issueId);
 
@@ -387,6 +457,7 @@ function addEmpathy(issueId) {
 
   issue.empathy = (Number(issue.empathy) || 0) + 1;
   updateIssuePopup(issueId);
+  updateIssueMarker(issueId);
   renderIssueList();
 }
 

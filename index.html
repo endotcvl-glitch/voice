@@ -42,6 +42,15 @@
           <span class="legend-dot status-resolved"></span>
           <span>解決済み</span>
         </div>
+        <div class="legend-divider"></div>
+        <div class="legend-row">
+          <span class="legend-pin legend-pin-problem"></span>
+          <span>問題点</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-pin legend-pin-request"></span>
+          <span>要望</span>
+        </div>
       </aside>
 
       <form class="issue-form" id="issue-form" aria-label="地域課題の投稿フォーム">
@@ -66,6 +75,14 @@
         </label>
 
         <div class="form-grid">
+          <label>
+            種類
+            <select id="issue-type" name="type" required>
+              <option value="問題点">問題点</option>
+              <option value="要望">要望</option>
+            </select>
+          </label>
+
           <label>
             カテゴリー
             <select id="category" name="category" required>
